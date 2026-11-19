@@ -1,0 +1,58 @@
+{
+  "student": 2,
+  "algorithm": "TF-IDF + Linear SVM",
+  "partition_fingerprint": "d17a2299ad1e64b524d50ac41e3b9828308b4c483a80ced900d85fc913777544",
+  "test_metrics": {
+    "accuracy": 0.9693806541405706,
+    "precision": 0.9741763134461264,
+    "recall": 0.931063829787234,
+    "f1": 0.9521322889469104
+  },
+  "robustness": [
+    {
+      "subset": "All test headlines",
+      "rows": 7185,
+      "fake_rows": 2350,
+      "accuracy": 0.9694,
+      "precision": 0.9742,
+      "recall": 0.9311,
+      "f1": 0.9521
+    },
+    {
+      "subset": "Excluding synthetic (AUGMENT)",
+      "rows": 5860,
+      "fake_rows": 1025,
+      "accuracy": 0.9802,
+      "precision": 0.9434,
+      "recall": 0.9434,
+      "f1": 0.9434
+    },
+    {
+      "subset": "Without giveaway words",
+      "rows": 5193,
+      "fake_rows": 462,
+      "accuracy": 0.964,
+      "precision": 0.8852,
+      "recall": 0.684,
+      "f1": 0.7717
+    },
+    {
+      "subset": "Neither synthetic nor giveaway",
+      "rows": 4922,
+      "fake_rows": 191,
+      "accuracy": 0.9817,
+      "precision": 0.776,
+      "recall": 0.7435,
+      "f1": 0.7594
+    }
+  ],
+  "details": {
+    "best_params": {
+      "clf__C": 1,
+      "clf__class_weight": "balanced",
+      "tfidf__min_df": 2,
+      "tfidf__sublinear_tf": false
+    },
+    "cv_f1": 0.9453971817211034
+  }
+}

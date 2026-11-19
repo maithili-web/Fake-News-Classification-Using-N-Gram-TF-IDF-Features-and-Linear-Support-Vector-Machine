@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IFND Headline Checker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <strong>IFND Headline Checker</strong>
+      <span>TF-IDF + Linear SVM</span>
+    </div>
+    <p id="status" class="status" role="status"><i></i><span>Connecting</span></p>
+  </div>
+  <nav class="wrap tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-check" aria-controls="view-check" aria-selected="true">Check</button>
+    <button class="tab" role="tab" id="tab-batch" aria-controls="view-batch" aria-selected="false">Batch</button>
+    <button class="tab" role="tab" id="tab-history" aria-controls="view-history" aria-selected="false">History</button>
+    <button class="tab" role="tab" id="tab-model" aria-controls="view-model" aria-selected="false">Model</button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section id="view-check" class="view check-grid" role="tabpanel" aria-labelledby="tab-check">
+    <form id="check-form" class="input-col">
+      <label for="headline">News headline</label>
+      <textarea id="headline" maxlength="2000" rows="5" placeholder="Paste an English news headline"></textarea>
+      <div class="row">
+        <button class="primary" type="submit" id="check-btn">Check headline</button>
+        <button class="secondary" type="button" id="sample-btn">Try a test headline</button>
+        <button class="text" type="button" id="clear-btn">Clear</button>
+      </div>
+      <p class="hint">Press Ctrl + Enter to check. The model reads wording only and does not verify facts.</p>
+      <p id="check-error" class="error" role="alert" hidden></p>
+    </form>
+    <div id="result" class="panel result" aria-live="polite">
+      <div id="result-empty" class="empty">
+        <h2>No headline checked yet</h2>
+        <p>Enter a headline, or try one from the test set that the model has never seen.</p>
+      </div>
+      <div id="result-body" hidden>
+        <p id="verdict" class="verdict"></p>
+        <p id="prob-text" class="prob-text"></p>
+        <div id="meter-block">
+          <div id="meter" class="meter"><i id="meter-fill"></i><b></b></div>
+          <div class="scale"><span>Real</span><span>0</span><span>Fake</span></div>
+        </div>
+        <p id="truth" class="note" hidden></p>
+        <p id="giveaway" class="note caution" hidden>This headline contains words common on fact-checking sites, such as "viral" or "claim". They strongly push the model towards Fake, whatever the claim says.</p>
+        <div id="terms-block">
+          <h3>Words that drove this result</h3>
+          <ul id="terms" class="terms"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-batch" class="view" role="tabpanel" aria-labelledby="tab-batch" hidden>
+    <form id="batch-form" class="stack">
+      <label for="batch-input">Headlines, one per line (up to 200)</label>
+      <textarea id="batch-input" rows="8" placeholder="First headline&#10;Second headline"></textarea>
+      <div class="row">
+        <button class="primary" type="submit" id="batch-btn">Check all</button>
+        <button class="secondary" type="button" id="batch-download" disabled>Download CSV</button>
+      </div>
+      <p id="batch-error" class="error" role="alert" hidden></p>
+    </form>
+    <div id="batch-results" class="stack" hidden>
+      <div id="batch-summary" class="summary"></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Headline</th><th>Result</th><th class="num">Margin score</th></tr></thead>
+        <tbody id="batch-rows"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="view-history" class="view stack" role="tabpanel" aria-labelledby="tab-history" hidden>
+    <div class="section-head">
+      <div>
+        <h2>Check history</h2>
+        <p class="hint">Single headline checks saved on this computer.</p>
+      </div>
+      <button class="secondary" type="button" id="history-clear">Delete history</button>
+    </div>
+    <div id="history-confirm" class="confirm" hidden>
+      <span>Delete all saved checks? This can't be undone.</span>
+      <div class="row">
+        <button class="danger" type="button" id="history-confirm-yes">Delete all</button>
+        <button class="secondary" type="button" id="history-confirm-no">Keep them</button>
+      </div>
+    </div>
+    <p id="history-error" class="error" role="alert" hidden></p>
+    <p id="history-empty" class="empty-line" hidden>No saved checks yet.</p>
+    <div id="history-table" class="table-wrap"><table>
+      <thead><tr><th>Checked</th><th>Headline</th><th>Result</th><th class="num">Margin score</th></tr></thead>
+      <tbody id="history-rows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="view-model" class="view stack-lg" role="tabpanel" aria-labelledby="tab-model" hidden>
+    <p id="model-error" class="error" role="alert" hidden></p>
+    <div>
+      <h2>Test results</h2>
+      <p class="hint">7,185 headlines the model never saw in training. Fake is the positive class.</p>
+      <div id="metric-tiles" class="tiles"></div>
+    </div>
+    <div class="two-col">
+      <div>
+        <h3>Confusion matrix</h3>
+        <div class="table-wrap"><table class="matrix">
+          <thead><tr><th>Actual</th><th class="num">Predicted real</th><th class="num">Predicted fake</th></tr></thead>
+          <tbody id="matrix-rows"></tbody>
+        </table></div>
+      </div>
+      <div>
+        <h3>Training details</h3>
+        <dl id="details" class="details"></dl>
+      </div>
+    </div>
+    <div>
+      <h3>How far to trust the scores</h3>
+      <p class="reading">Fake headlines in IFND often come from fact-checking sites, and many are synthetic. The scores drop when those easy patterns are removed. The lower rows give a more realistic picture of how the model handles a plain claim.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Test headlines</th><th class="num">Rows</th><th class="num">Accuracy</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th></tr></thead>
+        <tbody id="robust-rows"></tbody>
+      </table></div>
+    </div>
+    <div class="two-col">
+      <div><h3>Strongest signs of fake</h3><p id="top-fake" class="chips"></p></div>
+      <div><h3>Strongest signs of real</h3><p id="top-real" class="chips"></p></div>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
